@@ -38,6 +38,14 @@ graph LR
 
 ---
 
+## 🛡️ Notas de Seguridad
+
+- **Dependencia Excel (`xlsx`)**: El plugin utiliza la librería `sheetjs/xlsx`, la cual tiene una vulnerabilidad de *Prototype Pollution* conocida (GHSA-4r6h-8v6p-xvw6). **Esto solo representa un riesgo si abres archivos Excel de fuentes no confiables.** Para uso típico con tus propios archivos, el riesgo es insignificante.
+- **Acceso a Rutas**: Por defecto, el plugin opera con los permisos del usuario que ejecuta DSH. Puedes activar el modo `safePaths` en la configuración para restringir operaciones a directorios específicos.
+- **Privacidad Local**: Todas las operaciones de lectura, creación y conversión se realizan **100% en local**. Ningún dato es enviado a servidores externos.
+
+---
+
 ## 🚀 Instalación Rápida (1 comando)
 
 ```bash
