@@ -3,12 +3,10 @@
 > **Plugin profesional para DeepSeek Harness (DSH)**
 > Trabaja con archivos de ofimática: PDF, Word, Excel, PowerPoint — leer, crear, modificar, convertir.
 
-```markdown
 [![Node.js >=18](https://img.shields.io/badge/Node.js-%3E%3D18-green)](https://nodejs.org)
 [![DSH Plugin](https://img.shields.io/badge/DSH-Plugin-blue)](https://github.com/deepseek-ai/dsh)
 [![License MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Activo-success)]()
-```
 
 ---
 
