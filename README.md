@@ -36,6 +36,18 @@ graph LR
 | 📊 | **Excel** | Leer XLSX, crear hojas, modificar datos, convertir CSV |
 | 🎯 | **PowerPoint** | Crear presentaciones, plantillas, notas del presentador |
 
+## ⚙️ Configuración
+
+Puedes configurar el plugin en tu `dsh.config.yml`:
+
+```yaml
+plugins:
+  dsh-tool-office:
+    enabled: true        # Habilitar/deshabilitar herramientas
+    safePaths: true      # Restringir rutas al workspace (Seguridad)
+    workspaceDir: "."    # Directorio raíz permitido
+```
+
 ---
 
 ## 🛡️ Notas de Seguridad

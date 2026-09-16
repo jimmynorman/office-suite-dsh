@@ -3,6 +3,8 @@ import * as pdfTools from './pdf-tools.js';
 import * as wordTools from './word-tools.js';
 import * as excelTools from './excel-tools.js';
 import * as powerpointTools from './powerpoint-tools.js';
+import { resolve, isAbsolute, normalize, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 export const name = 'dsh-tool-office';
 
@@ -10,10 +12,27 @@ export const inject = ['tools'];
 
 export const Config = Schema.object({
   enabled: Schema.boolean().default(true).description('Habilitar herramientas de Office'),
+  safePaths: Schema.boolean().default(false).description('Restringir rutas al directorio de trabajo (defiende contra path traversal)'),
+  workspaceDir: Schema.string().default('.').description('Directorio raíz permitido cuando safePaths está activo'),
 });
 
 export function apply(ctx, config) {
   if (!config.enabled) return;
+
+  // === SAFEPATHS HELPER ===
+  const WORKSPACE = isAbsolute(config.workspaceDir)
+    ? config.workspaceDir
+    : resolve(process.cwd(), config.workspaceDir);
+
+  function resolvePath(raw) {
+    if (!config.safePaths) return raw;
+    const target = resolve(WORKSPACE, raw);
+    const normalized = normalize(target);
+    if (!normalized.startsWith(normalize(WORKSPACE) + '/' ) && normalized !== normalize(WORKSPACE)) {
+      throw new Error(`Ruta fuera del workspace permitido: ${raw}`);
+    }
+    return normalized;
+  }
 
   // ==================== HERRAMIENTAS PDF ====================
 
@@ -25,7 +44,7 @@ export function apply(ctx, config) {
     }),
     async execute({ file_path }) {
       try {
-        const result = await pdfTools.readPDF(file_path);
+        const result = await pdfTools.readPDF(resolvePath(file_path));
         return {
           type: 'text',
           text: `Archivo PDF leído exitosamente:\n` +
@@ -54,7 +73,7 @@ export function apply(ctx, config) {
     }),
     async execute({ file_path, title, content, author, subject, keywords }) {
       try {
-        const result = await pdfTools.createPDF(file_path, {
+        const result = await pdfTools.createPDF(resolvePath(file_path), {
           title, content, author, subject, keywords
         });
         return {
@@ -89,7 +108,7 @@ export function apply(ctx, config) {
     }),
     async execute({ file_path, add_page, page_content, add_text, update_metadata }) {
       try {
-        const result = await pdfTools.modifyPDF(file_path, {
+        const result = await pdfTools.modifyPDF(resolvePath(file_path), {
           addPage: add_page,
           pageContent: page_content,
           addText: add_text,
@@ -114,7 +133,7 @@ export function apply(ctx, config) {
     }),
     async execute({ output_path, input_paths }) {
       try {
-        const result = await pdfTools.mergePDFs(output_path, input_paths);
+        const result = await pdfTools.mergePDFs(resolvePath(output_path), input_paths.map(resolvePath));
         return {
           type: 'text',
           text: `PDFs combinados exitosamente:\n` +
@@ -138,7 +157,7 @@ export function apply(ctx, config) {
     }),
     async execute({ input_path, output_path, page_numbers }) {
       try {
-        const result = await pdfTools.extractPDFPages(input_path, output_path, page_numbers);
+        const result = await pdfTools.extractPDFPages(resolvePath(input_path), resolvePath(output_path), page_numbers);
         return {
           type: 'text',
           text: `Páginas extraídas exitosamente:\n` +
@@ -161,7 +180,7 @@ export function apply(ctx, config) {
     }),
     async execute({ file_path }) {
       try {
-        const result = await wordTools.readWord(file_path);
+        const result = await wordTools.readWord(resolvePath(file_path));
         return {
           type: 'text',
           text: `Archivo Word leído exitosamente:\n` +
@@ -200,7 +219,7 @@ export function apply(ctx, config) {
     }),
     async execute({ file_path, title, content, author, sections, paragraphs }) {
       try {
-        const result = await wordTools.createWord(file_path, {
+        const result = await wordTools.createWord(resolvePath(file_path), {
           title, content, author, sections, paragraphs
         });
         return {
@@ -234,7 +253,7 @@ export function apply(ctx, config) {
     }),
     async execute({ file_path, append_text, append_paragraphs, new_title }) {
       try {
-        const result = await wordTools.modifyWord(file_path, {
+        const result = await wordTools.modifyWord(resolvePath(file_path), {
           appendText: append_text,
           appendParagraphs: append_paragraphs,
           newTitle: new_title,
@@ -260,7 +279,7 @@ export function apply(ctx, config) {
     }),
     async execute({ input_path, output_path }) {
       try {
-        const result = await wordTools.wordToText(input_path, output_path);
+        const result = await wordTools.wordToText(resolvePath(input_path), resolvePath(output_path));
         return {
           type: 'text',
           text: `Documento convertido a texto:\n` +
@@ -283,7 +302,7 @@ export function apply(ctx, config) {
     }),
     async execute({ input_path, output_path }) {
       try {
-        const result = await wordTools.wordToHTML(input_path, output_path);
+        const result = await wordTools.wordToHTML(resolvePath(input_path), resolvePath(output_path));
         return {
           type: 'text',
           text: `Documento convertido a HTML:\n` +
@@ -310,7 +329,7 @@ export function apply(ctx, config) {
     }),
     async execute({ file_path, sheet_name, range, header }) {
       try {
-        const result = await excelTools.readExcel(file_path, {
+        const result = await excelTools.readExcel(resolvePath(file_path), {
           sheetName: sheet_name,
           range,
           header,
@@ -347,7 +366,7 @@ export function apply(ctx, config) {
     }),
     async execute({ file_path, data, sheet_name, headers, sheets }) {
       try {
-        const result = await excelTools.createExcel(file_path, {
+        const result = await excelTools.createExcel(resolvePath(file_path), {
           data, sheetName: sheet_name, headers, sheets
         });
         return {
@@ -382,7 +401,7 @@ export function apply(ctx, config) {
     }),
     async execute({ file_path, sheet_name, data, append_data, add_sheet, delete_sheet, update_cell }) {
       try {
-        const result = await excelTools.modifyExcel(file_path, {
+        const result = await excelTools.modifyExcel(resolvePath(file_path), {
           sheetName: sheet_name,
           data,
           appendData: append_data,
@@ -412,7 +431,7 @@ export function apply(ctx, config) {
     }),
     async execute({ input_path, output_path, sheet_name }) {
       try {
-        const result = await excelTools.excelToCSV(input_path, output_path, { sheetName: sheet_name });
+        const result = await excelTools.excelToCSV(resolvePath(input_path), resolvePath(output_path), { sheetName: sheet_name });
         return {
           type: 'text',
           text: `Excel convertido a CSV:\n` +
@@ -436,7 +455,7 @@ export function apply(ctx, config) {
     }),
     async execute({ input_path, output_path, sheet_name }) {
       try {
-        const result = await excelTools.csvToExcel(input_path, output_path, { sheetName: sheet_name });
+        const result = await excelTools.csvToExcel(resolvePath(input_path), resolvePath(output_path), { sheetName: sheet_name });
         return {
           type: 'text',
           text: `CSV convertido a Excel:\n` +
@@ -460,7 +479,7 @@ export function apply(ctx, config) {
     }),
     async execute({ file_path, cell, sheet_name }) {
       try {
-        const result = await excelTools.readCell(file_path, cell, sheet_name);
+        const result = await excelTools.readCell(resolvePath(file_path), cell, sheet_name);
         return {
           type: 'text',
           text: `Celda ${result.cell}:\n` +
@@ -482,7 +501,7 @@ export function apply(ctx, config) {
     }),
     async execute({ file_path }) {
       try {
-        const result = await excelTools.getExcelStats(file_path);
+        const result = await excelTools.getExcelStats(resolvePath(file_path));
         let text = `Estadísticas del archivo Excel:\n- Total de hojas: ${result.totalSheets}\n\n`;
         for (const sheet of result.sheets) {
           text += `Hoja: ${sheet.name}\n`;
@@ -534,7 +553,7 @@ export function apply(ctx, config) {
     }),
     async execute({ file_path, title, author, subject, slides }) {
       try {
-        const result = await powerpointTools.createPowerPoint(file_path, {
+        const result = await powerpointTools.createPowerPoint(resolvePath(file_path), {
           title, author, subject, slides
         });
         return {
@@ -561,7 +580,7 @@ export function apply(ctx, config) {
     }),
     async execute({ file_path, slides }) {
       try {
-        const result = await powerpointTools.createSimplePowerPoint(file_path, slides);
+        const result = await powerpointTools.createSimplePowerPoint(resolvePath(file_path), slides);
         return {
           type: 'text',
           text: `Presentación simple creada exitosamente:\n` +
@@ -592,7 +611,7 @@ export function apply(ctx, config) {
     }),
     async execute({ file_path, title, author, sections }) {
       try {
-        const result = await powerpointTools.createPresentationFromTemplate(file_path, {
+        const result = await powerpointTools.createPresentationFromTemplate(resolvePath(file_path), {
           title, author, sections
         });
         return {

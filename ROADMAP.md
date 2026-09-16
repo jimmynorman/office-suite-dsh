@@ -34,8 +34,10 @@ Usuario → DSH → Detecta archivo ofimática → Plugin procesa → Resultado 
 | PDF (leer/crear/modificar/combinar) | ✅ | `pdf-lib` + `pdf-parse` |
 | Word DOCX | ✅ | `docx` + `mammoth` |
 | Excel XLSX | ✅ | `xlsx` (vulnerabilidad conocida: GHSA-4r6h-8v6p-xvw6 — sin fix disponible, no crítica en uso local) |
-| PowerPoint PPTX | ⚠️ | `pptxgenjs` solo crea; no lee/modifica existentes |
+| PowerPoint PPTX | ✅ | `pptxgenjs` v4.x (migrado) |
 | Auto-procesamiento adjuntos | ✅ | Detecta `.pdf`, `.docx`, `.xlsx`, `.csv`, `.pptx` |
+| Seguridad (safePaths) | ✅ | Protección contra Path Traversal |
+| Dependabot | ✅ | Actualizaciones automáticas activas |
 | Instalador global | ✅ | `install-global.js` con detección de `~/.dsh` |
 | Pruebas | ✅ | 14 casos básicos en `tests/basic-tests.js` |
 | Documentación | ✅ | README, INSTALL, EXAMPLES, QUICKSTART |
