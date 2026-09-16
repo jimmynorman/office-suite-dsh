@@ -34,7 +34,7 @@
     "node-poppler": "^7.2.0",
     "officegen": "^0.6.5",
     "pdf-lib": "^1.17.1",
-    "pdf-parse": "^1.1.1",
+    "pdf-parse": "^2.4.5",
     "pptxgenjs": "^4.0.1",
     "qs": "^6.16.0",
     "tough-cookie": "^6.0.2",
